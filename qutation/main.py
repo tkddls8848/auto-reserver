@@ -1,12 +1,16 @@
+import xml_to_xsl as xtx
 from tkinter import Tk, Button, ttk
 
 window = Tk()
 window.geometry("600x500")
 window.title("Qutation")
 
-button = ttk.Button(text="TEST")
+def convert():
+    print('convert')
+    xtx.save_excel()
 
-button.grid(column=0, row=1)
+button = ttk.Button(text="TEST", command=convert)
+
+button.grid(column=4, row=1)
 
 window.mainloop()
-
