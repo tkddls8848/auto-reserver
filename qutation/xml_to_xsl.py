@@ -1,33 +1,58 @@
-import datetime
 import os
+from queue import Empty
 import xml.etree.ElementTree as Et
 from openpyxl import Workbook
 from collections import defaultdict
 
+
 xmlparse = Et.parse(os.getcwd() + '\\qutation\\tmp\\E1080.xml')
 root = xmlparse
 data_dict = defaultdict(list)
-ProprietaryInformation = defaultdict(object)
-ProductLineItem = defaultdict(object)
 
+# CFXML => CFData => ProductLineItem =>
+# key : ProductIdentification =>ProprietaryProductIdentifier =>{ProductDescription:,ProductTypeCode:,}, 
+# key : UnitListPrice => FinancialAmount {GlobalCurrencyCode, MonetaryAmount} 
+# key : MaintenanceUnitListPrice => FinancialAmount {GlobalCurrencyCode, MonetaryAmount} 
+# key : ProductSubLineItem => {위 키 3개 반복}
 def save_excel():
     w_book = Workbook()
     w_sheet = w_book.active
     w_sheet.cell(row=1, column=1).value = 'START'
-    key_dict = defaultdict(list)
+    for _ in root.getroot().iter():
+        product_quantity = 0
+        product_id = []
+        product_cost = []
+        if _.tag == "ProductSubLineItem":
+            print("ProductSubLineItem", i)
+        if _.tag == "Quantity":
+            print()
+            print(_.tag, _.text)
+            product_quantity = int(_.text)
+            print(product_quantity)
+        elif _.tag == "ProductIdentification":
+            for i in _.iter():
+                if i.tag == "ProprietaryProductIdentifier":
+                    print("Model No.", i.text)
+                    product_id.append(i.text)
+                elif i.tag == "ProductDescription":
+                    print("Description", i.text)
+                    product_id.append(i.text)
+                elif i.tag == "ProductTypeCode":
+                    print("ITEM", i.text)    
+                    product_id.append(i.text)                                   
+        elif _.tag == "UnitListPrice":
+            for i in _.find("FinancialAmount"):
+                if i.tag == "MonetaryAmount":
+                    print("cost", i.text)
+                    product_cost.append(i.text)
+        elif _.tag == "MaintenanceUnitListPrice":
+            print("MaintenanceUnitListPrice", _)   
+            product_cost.append(_.text)     
+        if product_id != []:
+            print(product_id)
+        if product_cost != []:
+            print(product_cost)
     
-    for i in range(len(root.getroot().find('CFData').findall('ProductLineItem'))):
-        print('DETAIL INFO')
-        w_sheet.append(['DETAIL INFO'])
-        for _ in root.getroot().find('CFData').findall('ProductLineItem')[i].find('ProductIdentification').find('PartnerProductIdentification'):
-            print('KEY : ', _.tag, 'VALUE : ', _.text)
-            key_dict[_.tag].append(_.text)
-            w_sheet.append([_.tag, _.text])
-        w_sheet.append([root.getroot().find('CFData').findall('ProductLineItem')[i].find('ProductIdentification').find('PartnerProductIdentification').text])
-    print(key_dict)
-    w_book.create_sheet(index=1, title='test')
-    w_sheet = w_book['test']
-    w_sheet.cell(row=1, column=1).value = 'NEW START'
     w_book.save(os.getcwd() + '\\qutation\\tmp\\samples.xlsx')
 
 save_excel()
